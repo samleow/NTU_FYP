@@ -27,6 +27,8 @@ public class PlayerController : MonoBehaviour
 
     private bool _deadPlaying = false;
 
+    public bool playerControl = true;
+
     // Use this for initialization
     void Start()
     {
@@ -34,6 +36,7 @@ public class PlayerController : MonoBehaviour
         SM = GameObject.Find("Game Manager").GetComponent<ScoreManager>();
         GUINav = GameObject.Find("UI Manager").GetComponent<GameGUINavigation>();
         _dest = transform.position;
+        playerControl = true;
     }
 
     // Update is called once per frame
@@ -42,7 +45,12 @@ public class PlayerController : MonoBehaviour
         switch (GameManager.gameState)
         {
             case GameManager.GameState.Game:
-                ReadInputAndMove();
+                if (playerControl)
+                    ReadInputAndMove();
+                else
+                {
+                    MoveBasedOn(PlayerAI.instance.GetAIDirection());
+                }
                 Animate();
                 break;
 
@@ -111,6 +119,33 @@ public class PlayerController : MonoBehaviour
         if (Input.GetAxis("Horizontal") < 0) _nextDir = -Vector2.right;
         if (Input.GetAxis("Vertical") > 0) _nextDir = Vector2.up;
         if (Input.GetAxis("Vertical") < 0) _nextDir = -Vector2.up;
+
+        // if pacman is in the center of a tile
+        if (Vector2.Distance(_dest, transform.position) < 0.00001f)
+        {
+            if (Valid(_nextDir))
+            {
+                _dest = (Vector2)transform.position + _nextDir;
+                _dir = _nextDir;
+            }
+            else   // if next direction is not valid
+            {
+                if (Valid(_dir))  // and the prev. direction is valid
+                    _dest = (Vector2)transform.position + _dir;   // continue on that direction
+
+                // otherwise, do nothing
+            }
+        }
+    }
+
+    void MoveBasedOn(Vector2 dir)
+    {
+        // move closer to destination
+        Vector2 p = Vector2.MoveTowards(transform.position, _dest, speed);
+        GetComponent<Rigidbody2D>().MovePosition(p);
+
+        // get the next direction from input
+        _nextDir = dir;
 
         // if pacman is in the center of a tile
         if (Vector2.Distance(_dest, transform.position) < 0.00001f)

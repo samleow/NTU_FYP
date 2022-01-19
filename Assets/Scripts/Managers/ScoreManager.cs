@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ScoreManager : MonoBehaviour {
 
@@ -33,13 +34,34 @@ public class ScoreManager : MonoBehaviour {
 
     List<Score> scoreList = new List<Score>(10);
 
-    void OnLevelWasLoaded(int level)
+    // Deprecated
+    // Replaced with delegate subscriptions
+    /*void OnLevelWasLoaded(int level)
     {
         //StartCoroutine("ReadScoresFromDB");
 
         if (level == 2) StartCoroutine("UpdateGUIText");    // if scores is loaded
         if (level == 1) _lowestHigh = _highscore = 99999;
         //if (level == 1) StartCoroutine("GetHighestScore");  // if game is loaded
+    }*/
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnLevelFinishedLoading;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnLevelFinishedLoading;
+    }
+
+    private void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
+    {
+        //StartCoroutine("ReadScoresFromDB");
+
+        if (scene.name == "scores") StartCoroutine("UpdateGUIText");    // if scores is loaded
+        if (scene.name == "game") _lowestHigh = _highscore = 99999;
+        //if (scene.name == "game") StartCoroutine("GetHighestScore");  // if game is loaded
     }
 
     IEnumerator GetHighestScore()

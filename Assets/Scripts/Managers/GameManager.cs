@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
 
@@ -69,7 +70,8 @@ public class GameManager : MonoBehaviour {
 		gameState = GameState.Init;
 	}
 
-    void OnLevelWasLoaded()
+    // Deprecated
+    /*void OnLevelWasLoaded()
     {
         if (Level == 0) lives = 3;
 
@@ -84,6 +86,33 @@ public class GameManager : MonoBehaviour {
         pinky.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
         inky.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
         pacman.GetComponent<PlayerController>().speed += Level*SpeedPerLevel/2;
+    }*/
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnLevelFinishedLoading;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnLevelFinishedLoading;
+    }
+
+    private void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
+    {
+        if (Level == 0) lives = 3;
+
+        Debug.Log("Level " + Level + " Loaded!");
+        AssignGhosts();
+        ResetVariables();
+
+
+        // Adjust Ghost variables!
+        clyde.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
+        blinky.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
+        pinky.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
+        inky.GetComponent<GhostMove>().speed += Level * SpeedPerLevel;
+        pacman.GetComponent<PlayerController>().speed += Level * SpeedPerLevel / 2;
     }
 
     private void ResetVariables()
