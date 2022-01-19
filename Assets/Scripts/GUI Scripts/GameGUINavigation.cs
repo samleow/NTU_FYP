@@ -3,6 +3,8 @@ using UnityEngine;
 using System.Collections;
 using System.Text.RegularExpressions;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class GameGUINavigation : MonoBehaviour {
 
@@ -140,7 +142,8 @@ public class GameGUINavigation : MonoBehaviour {
 
 	public void Menu()
 	{
-		Application.LoadLevel("menu");
+		//Application.LoadLevel("menu");
+		SceneManager.LoadScene("menu");
 		Time.timeScale = 1.0f;
 
         // take care of game manager
@@ -153,9 +156,9 @@ public class GameGUINavigation : MonoBehaviour {
         string AddScoreURL = "http://ilbeyli.byethost18.com/addscore.php?";
         string hash = Md5Sum(name + score + privateKey);
 
-        Debug.Log("Name: " + name + " Escape: " + WWW.EscapeURL(name));
+        Debug.Log("Name: " + name + " Escape: " + UnityWebRequest.EscapeURL(name));
 
-        WWW ScorePost = new WWW(AddScoreURL + "name=" + WWW.EscapeURL(name) + "&score=" + score + "&hash=" + hash );
+		UnityWebRequest ScorePost = new UnityWebRequest(AddScoreURL + "name=" + UnityWebRequest.EscapeURL(name) + "&score=" + score + "&hash=" + hash );
         yield return ScorePost;
 
         if (ScorePost.error == null)
@@ -167,8 +170,9 @@ public class GameGUINavigation : MonoBehaviour {
             GameManager.score = 0;
             GameManager.Level = 0;
 
-            Application.LoadLevel("scores");
-            Time.timeScale = 1.0f;
+            //Application.LoadLevel("scores");
+			SceneManager.LoadScene("scores");
+			Time.timeScale = 1.0f;
         }
         else
         {
@@ -215,8 +219,9 @@ public class GameGUINavigation : MonoBehaviour {
     public void LoadLevel()
     {
         GameManager.Level++;
-        Application.LoadLevel("game");
-    }
+        //Application.LoadLevel("game");
+		SceneManager.LoadScene("game");
+	}
 
     public void ToggleErrorMsg(string errorMsg)
     {

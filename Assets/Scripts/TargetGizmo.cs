@@ -21,4 +21,10 @@ public class TargetGizmo : MonoBehaviour {
 			transform.position = pos;
 		}
 	}
+
+    private void OnDrawGizmos()
+    {
+		Gizmos.color = Color.red;
+		Gizmos.DrawLine(transform.position, ghost.transform.position);
+    }
 }

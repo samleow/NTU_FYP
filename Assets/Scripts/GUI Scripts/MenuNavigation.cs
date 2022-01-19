@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class MenuNavigation : MonoBehaviour {
 
 	public void MainMenu()
 	{
-		Application.LoadLevel("menu");
+		//Application.LoadLevel("menu");
+		SceneManager.LoadScene("menu");
 	}
 
 	public void Quit()
@@ -15,19 +17,22 @@ public class MenuNavigation : MonoBehaviour {
 	
 	public void Play()
 	{
-		Application.LoadLevel("game");
+		//Application.LoadLevel("game");
+		SceneManager.LoadScene("game");
 	}
 	
 	public void HighScores()
 	{
-		Application.LoadLevel("scores");
-		
+		//Application.LoadLevel("scores");
+		SceneManager.LoadScene("scores");
+
 	}
 
     public void Credits()
     {
-        Application.LoadLevel("credits");
-    }
+        //Application.LoadLevel("credits");
+		SceneManager.LoadScene("credits");
+	}
 
 	public void SourceCode()
 	{
