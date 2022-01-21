@@ -22,6 +22,15 @@ public class TileManager : MonoBehaviour {
 			left = right = up = down = null;
 		}
 
+		public Vector2 GetTileDirection(Tile tile)
+		{
+			if (tile.Equals(left)) return Vector2.left;
+			if (tile.Equals(right)) return Vector2.right;
+			if (tile.Equals(up)) return Vector2.up;
+			if (tile.Equals(down)) return Vector2.down;
+
+			return Vector2.zero;
+		}
 
 	};
 	

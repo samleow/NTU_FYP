@@ -14,7 +14,6 @@ public class ChaseGhostsState : PlayerState
     public override void Enter()
     {
 
-
         base.Enter();
     }
 
@@ -25,8 +24,14 @@ public class ChaseGhostsState : PlayerState
             nextState = new EvadeGhostsState();
             stage = EVENT.EXIT;
         }
+        else
+        {
+            // chase ghost
+            moveDirection = PlayerAI.Instance.PathfindTargetDirection(GetClosestGhost());
 
-        //base.Update();
+
+            //base.Update();
+        }
     }
 
     public override void Exit()
@@ -41,7 +46,27 @@ public class ChaseGhostsState : PlayerState
     // boost is running out
     private bool GhostsFlashing()
     {
-        return true;
+        // might need to use a timer
+        return !GameManager.scared;
+    }
+
+    // might have a problem when ghost has respawned after being eaten
+    // pacman will chase ghost when ghost is not scared
+    GameObject GetClosestGhost()
+    {
+        GameObject closestGhost = null;
+        float shortest_dist = Mathf.Infinity;
+        foreach (var ghost in PlayerAI.Instance.ghosts)
+        {
+            float dist = Vector3.Distance(ghost.transform.position, PlayerAI.Instance.pacman.transform.position);
+            if (dist < shortest_dist)
+            {
+                closestGhost = ghost;
+                shortest_dist = dist;
+            }
+        }
+
+        return closestGhost;
     }
 
 }
