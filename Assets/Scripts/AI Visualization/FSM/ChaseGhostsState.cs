@@ -20,21 +20,13 @@ public class ChaseGhostsState : PlayerState
 
     public override void Update()
     {
-        if (PoweringDown())
+        if (GhostsFlashing())
         {
-            if (GettingAmbushed())
-            {
-                nextState = new EvadeGhostsState();
-                stage = EVENT.EXIT;
-            }
-            else
-            {
-                nextState = new SeekPelletsState();
-                stage = EVENT.EXIT;
-            }
+            nextState = new EvadeGhostsState();
+            stage = EVENT.EXIT;
         }
 
-        base.Update();
+        //base.Update();
     }
 
     public override void Exit()
@@ -47,13 +39,7 @@ public class ChaseGhostsState : PlayerState
     #endregion
 
     // boost is running out
-    private bool PoweringDown()
-    {
-        return true;
-    }
-
-    // if 3 or more ghosts are nearby
-    private bool GettingAmbushed()
+    private bool GhostsFlashing()
     {
         return true;
     }

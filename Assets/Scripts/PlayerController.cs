@@ -49,7 +49,7 @@ public class PlayerController : MonoBehaviour
                     ReadInputAndMove();
                 else
                 {
-                    MoveBasedOn(PlayerAI.instance.GetAIDirection());
+                    MoveBasedOn(PlayerAI.Instance.GetAIDirection());
                 }
                 Animate();
                 break;
@@ -165,7 +165,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public Vector2 getDir()
+    public Vector2 GetDir()
     {
         return _dir;
     }

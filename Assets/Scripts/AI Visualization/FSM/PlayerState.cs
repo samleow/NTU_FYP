@@ -14,11 +14,14 @@ public class PlayerState
 
     protected PlayerState nextState;
 
+    protected Vector2 moveDirection;
+
     public PlayerState()
     {
         name = STATE.NULL;
         stage = EVENT.ENTER;
         nextState = null;
+        moveDirection = Vector2.zero;
     }
 
     // virtual methods
@@ -37,5 +40,10 @@ public class PlayerState
         }
 
         return this;
+    }
+
+    public Vector2 GetDirection()
+    {
+        return moveDirection;
     }
 }

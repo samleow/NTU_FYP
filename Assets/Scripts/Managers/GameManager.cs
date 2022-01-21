@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour {
     // singleton implementation
     private static GameManager _instance;
 
-    public static GameManager instance
+    public static GameManager Instance
     {
         get
         {

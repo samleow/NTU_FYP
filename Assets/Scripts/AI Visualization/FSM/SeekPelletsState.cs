@@ -14,29 +14,32 @@ public class SeekPelletsState : PlayerState
     public override void Enter()
     {
 
-
         base.Enter();
     }
 
     public override void Update()
     {
-        if (PoweredUp())
+        if (PowerPillEaten())
         {
             nextState = new ChaseGhostsState();
             stage = EVENT.EXIT;
         }
-        else if (GettingAmbushed())
+        else if (GhostInSight())
         {
             nextState = new EvadeGhostsState();
             stage = EVENT.EXIT;
         }
+        else
+        {
 
-        base.Update();
+
+            base.Update();
+        }
+
     }
 
     public override void Exit()
     {
-
 
         base.Exit();
     }
@@ -44,15 +47,15 @@ public class SeekPelletsState : PlayerState
     #endregion
 
     // if pacman ate a power pill
-    private bool PoweredUp()
+    private bool PowerPillEaten()
     {
-        return true;
+        return false;
     }
 
     // if 3 or more ghosts are nearby
-    private bool GettingAmbushed()
+    private bool GhostInSight()
     {
-        return true;
+        return false;
     }
 
 }

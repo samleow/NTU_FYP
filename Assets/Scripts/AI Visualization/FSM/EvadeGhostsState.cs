@@ -20,18 +20,18 @@ public class EvadeGhostsState : PlayerState
 
     public override void Update()
     {
-        if (PoweredUp())
+        if (PowerPillEaten())
         {
             nextState = new ChaseGhostsState();
             stage = EVENT.EXIT;
         }
-        else if (IsSafe())
+        else if (NoVisibleGhost())
         {
             nextState = new SeekPelletsState();
             stage = EVENT.EXIT;
         }
 
-        base.Update();
+        //base.Update();
     }
 
     public override void Exit()
@@ -44,13 +44,13 @@ public class EvadeGhostsState : PlayerState
     #endregion
 
     // if pacman ate a power pill
-    private bool PoweredUp()
+    private bool PowerPillEaten()
     {
         return true;
     }
 
     // if less than 3 ghosts are nearby
-    private bool IsSafe()
+    private bool NoVisibleGhost()
     {
         return true;
     }
