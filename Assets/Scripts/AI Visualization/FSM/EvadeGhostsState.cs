@@ -33,10 +33,10 @@ public class EvadeGhostsState : PlayerState
         }
         else
         {
-            List<Stack<Vector2>> dangerPaths = new List<Stack<Vector2>>();
+            List<Tuple<PlayerAI.Node, Stack<Vector2>>> dangerPaths = new List<Tuple<PlayerAI.Node, Stack<Vector2>>>();
 
             foreach (var ghost in PlayerAI.Instance.ghosts)
-                dangerPaths.Add(PlayerAI.Instance.PathfindTargetFullInfo(ghost).Item2);
+                dangerPaths.Add(PlayerAI.Instance.PathfindTargetFullInfo(ghost));
 
             dangerPaths.Sort(SortByDistance);
 
@@ -44,11 +44,13 @@ public class EvadeGhostsState : PlayerState
             foreach (var path in dangerPaths)
             {
                 // ghost still in cage
-                if (path.Count == 0)
+                if (path.Item2.Count == 0)
                     continue;
 
-                if (!toAvoid.Contains(path.Peek()))
-                    toAvoid.Add(path.Peek());
+                VisualizationManager.DisplayPathfindByNode(path.Item1, Color.red);
+
+                if (!toAvoid.Contains(path.Item2.Peek()))
+                    toAvoid.Add(path.Item2.Peek());
             }
 
             foreach (var direction in PlayerAI.Instance.PossibleDirections())
@@ -78,29 +80,31 @@ public class EvadeGhostsState : PlayerState
     #endregion
 
     // if pacman ate a power pill
+    // may be bugged cause some ghosts may have respawned without being scared
     private bool PowerPillEaten()
     {
         return GameManager.scared;
     }
 
-    // if less than 2 ghosts are nearby
     private bool NoVisibleGhost()
     {
-        int ghostsNearby = 0;
-        float proximityRadius = 10f;
+        int personalSpace = 8;
 
         foreach (GameObject ghost in PlayerAI.Instance.ghosts)
         {
-            if (Vector3.Distance(ghost.transform.position, PlayerAI.Instance.pacman.transform.position) <= proximityRadius)
-                ghostsNearby++;
+            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
+                continue;
+            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(ghost);
+            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
+                return false;
         }
 
-        return ghostsNearby < 2;
+        return true;
     }
 
-    static int SortByDistance(Stack<Vector2> stack1, Stack<Vector2> stack2)
+    static int SortByDistance(Tuple<PlayerAI.Node, Stack<Vector2>> stack1, Tuple<PlayerAI.Node, Stack<Vector2>> stack2)
     {
-        return stack1.Count.CompareTo(stack2.Count);
+        return stack1.Item2.Count.CompareTo(stack2.Item2.Count);
     }
 
 }

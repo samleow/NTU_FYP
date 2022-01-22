@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using static TileManager;
 
 public class PlayerAI : MonoBehaviour
@@ -10,6 +11,8 @@ public class PlayerAI : MonoBehaviour
     public GameObject pacman;
     public GameObject[] ghosts;
     public TileManager tileManager;
+
+    public bool activated;
 
     private PlayerState currentState;
 
@@ -54,10 +57,13 @@ public class PlayerAI : MonoBehaviour
     void Start()
     {
         currentState = new SeekPelletsState();
+        activated = false;
     }
 
     void Update()
     {
+        if (GameManager.lives <= 0 || !activated)
+            return;
         if (aiMode == AI_MODE.FSM)
         {
             currentState = currentState.Process();
@@ -75,7 +81,9 @@ public class PlayerAI : MonoBehaviour
     public Vector2 GetAIDirection()
     {
         if (aiMode == AI_MODE.FSM)
+        {
             return currentState.GetDirection();
+        }
         else if (aiMode == AI_MODE.BT)
         {
 

@@ -65,7 +65,12 @@ public class SeekPelletsState : PlayerState
 
             // chase after closest pellet
             // sets moveDirection
-            moveDirection = PlayerAI.Instance.PathfindTargetDirection(closestPellet);
+
+            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(closestPellet);
+            VisualizationManager.DisplayPathfindByNode(t.Item1, Color.green);
+
+            if (t.Item2.Count > 0)
+                moveDirection = t.Item2.Peek();
 
             //base.Update();
         }
@@ -81,24 +86,26 @@ public class SeekPelletsState : PlayerState
     #endregion
 
     // if pacman ate a power pill
+    // may be bugged cause some ghosts may have respawned without being scared
     private bool PowerPillEaten()
     {
         return GameManager.scared;
     }
 
-    // if 2 or more ghosts are nearby
     private bool GhostInSight()
     {
-        int ghostsNearby = 0;
-        float proximityRadius = 10f;
+        int personalSpace = 8;
 
         foreach (GameObject ghost in PlayerAI.Instance.ghosts)
         {
-            if (Vector3.Distance(ghost.transform.position, PlayerAI.Instance.pacman.transform.position) <= proximityRadius)
-                ghostsNearby++;
+            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
+                continue;
+            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(ghost);
+            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
+                return true;
         }
 
-        return ghostsNearby >= 2;
+        return false;
     }
 
 }

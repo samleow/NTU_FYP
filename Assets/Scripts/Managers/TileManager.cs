@@ -32,6 +32,11 @@ public class TileManager : MonoBehaviour {
 			return Vector2.zero;
 		}
 
+		public Vector3 GetTilePosition()
+		{
+			return new Vector3(x, y, 0);
+		}
+
 	};
 	
 	public List<Tile> tiles = new List<Tile>();
@@ -40,7 +45,6 @@ public class TileManager : MonoBehaviour {
 	void Start () 
 	{
         ReadTiles();
-
 	}
 
     // Update is called once per frame
