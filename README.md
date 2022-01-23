@@ -1,7 +1,7 @@
-A.I. Visualisation Software
+A.I. Visualization Software
 ============
 
-An A.I. visualisation software based of a Pacman clone made by [vilbeyli](https://vilbeyli.github.io/).
+An A.I. visualization software based of a Pacman clone made by [Volkan Ilbeyli](https://vilbeyli.github.io/).
 
 ----
 

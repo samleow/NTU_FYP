@@ -4,7 +4,12 @@ using UnityEngine.SceneManagement;
 
 public class MenuNavigation : MonoBehaviour {
 
-	public void MainMenu()
+    private void Start()
+    {
+		Screen.SetResolution(1280, 720, false);
+    }
+
+    public void MainMenu()
 	{
 		//Application.LoadLevel("menu");
 		SceneManager.LoadScene("menu");
