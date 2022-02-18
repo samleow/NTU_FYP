@@ -14,11 +14,15 @@ public class PlayerAI : MonoBehaviour
 
     public bool activated;
 
+    // FSM state
     private PlayerState currentState;
 
     public enum AI_MODE { FSM, BT }
 
     public AI_MODE aiMode = AI_MODE.FSM;
+
+    // Behaviour Tree
+    BehaviourTree tree;
 
     #region Singleton
 
@@ -56,8 +60,32 @@ public class PlayerAI : MonoBehaviour
 
     void Start()
     {
-        currentState = new SeekPelletsState();
         activated = false;
+        // FSM init
+        currentState = new SeekPelletsState();
+        // BT init
+        tree = new BehaviourTree();
+
+        BTNode seekPellets = new BTNode("Seek pellets");
+        BTNode findPellet = new BTNode("Finding pellets");
+        BTNode foundPellet = new BTNode("Found pellets");
+        BTNode eatPellet = new BTNode("Eat pellets");
+
+        BTLeaf ghostFreeCorridor = new BTLeaf("Move to ghost free corridor", GhostFreeCorridor);
+        BTNode pelletCorridor = new BTNode("Move to corridor with pellets");
+        BTNode noPelletCorridor = new BTNode("Move to corridor without pellets");
+
+        findPellet.AddChild(ghostFreeCorridor);
+        findPellet.AddChild(pelletCorridor);
+        findPellet.AddChild(noPelletCorridor);
+
+        seekPellets.AddChild(findPellet);
+        seekPellets.AddChild(foundPellet);
+        seekPellets.AddChild(eatPellet);
+        tree.AddChild(seekPellets);
+
+        tree.PrintTree();
+
     }
 
     void Update()
@@ -101,6 +129,16 @@ public class PlayerAI : MonoBehaviour
 
         return currentState.name.ToString();
     }
+
+    #region Behaviour Tree Processes
+
+    BTNode.Status GhostFreeCorridor()
+    {
+
+        return BTNode.Status.SUCCESS;
+    }
+
+    #endregion
 
     #region Pathfinding
 
