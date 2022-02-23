@@ -23,6 +23,7 @@ public class PlayerAI : MonoBehaviour
 
     // Behaviour Tree
     BehaviourTree tree;
+    BTNode.Status treeStatus = BTNode.Status.RUNNING;
 
     #region Singleton
 
@@ -98,7 +99,9 @@ public class PlayerAI : MonoBehaviour
         }
         else if (aiMode == AI_MODE.BT)
         {
-
+            //if (treeStatus == BTNode.Status.RUNNING)
+            if (treeStatus != BTNode.Status.SUCCESS)
+                treeStatus = tree.Process();
         }
         else
         {
