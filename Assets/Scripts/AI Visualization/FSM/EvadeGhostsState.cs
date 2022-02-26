@@ -21,12 +21,12 @@ public class EvadeGhostsState : PlayerState
 
     public override void Update()
     {
-        if (PowerPillEaten())
+        if (PowerPillEaten() && !GhostsFlashing())
         {
             nextState = new ChaseGhostsState();
             stage = EVENT.EXIT;
         }
-        else if (NoVisibleGhost())
+        else if (!PlayerAI.Instance.GhostInSight())
         {
             nextState = new SeekPelletsState();
             stage = EVENT.EXIT;
@@ -38,7 +38,7 @@ public class EvadeGhostsState : PlayerState
             foreach (var ghost in PlayerAI.Instance.ghosts)
                 dangerPaths.Add(PlayerAI.Instance.PathfindTargetFullInfo(ghost));
 
-            dangerPaths.Sort(SortByDistance);
+            dangerPaths.Sort(PlayerAI.SortByDistance);
 
             List<Vector2> toAvoid = new List<Vector2>();
             foreach (var path in dangerPaths)
@@ -81,30 +81,16 @@ public class EvadeGhostsState : PlayerState
 
     // if pacman ate a power pill
     // may be bugged cause some ghosts may have respawned without being scared
+    // will keep alternating between chase ghost and evade ghost state
     private bool PowerPillEaten()
     {
         return GameManager.scared;
     }
 
-    private bool NoVisibleGhost()
+    // boost is running out
+    private bool GhostsFlashing()
     {
-        int personalSpace = 8;
-
-        foreach (GameObject ghost in PlayerAI.Instance.ghosts)
-        {
-            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
-                continue;
-            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(ghost);
-            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
-                return false;
-        }
-
-        return true;
-    }
-
-    static int SortByDistance(Tuple<PlayerAI.Node, Stack<Vector2>> stack1, Tuple<PlayerAI.Node, Stack<Vector2>> stack2)
-    {
-        return stack1.Item2.Count.CompareTo(stack2.Item2.Count);
+        return PlayerAI.Instance.PoweringDown();
     }
 
 }

@@ -16,9 +16,6 @@ public class BTLeaf : BTNode
 
     public override Status Process()
     {
-        // debug
-        Debug.Log("Leaf processing:\t" + name);
-
         if (ProcessMethod != null)
             return ProcessMethod();
         return Status.FAILURE;

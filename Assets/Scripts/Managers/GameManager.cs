@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour {
     static public int score;
 
 	public float scareLength;
-	private float _timeToCalm;
+	public float _timeToCalm;
 
     public float SpeedPerLevel;
     

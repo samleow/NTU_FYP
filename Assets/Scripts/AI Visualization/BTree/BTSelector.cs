@@ -12,9 +12,6 @@ public class BTSelector : BTNode
 
     public override Status Process()
     {
-        // debug
-        Debug.Log("Selector processing child:\t" + children[currentChild].name);
-
         Status childStatus = children[currentChild].Process();
         if (childStatus == Status.RUNNING) return Status.RUNNING;
         if (childStatus == Status.SUCCESS)

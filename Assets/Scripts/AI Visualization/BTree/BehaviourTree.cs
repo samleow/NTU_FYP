@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BehaviourTree : BTNode
+public class BehaviourTree : BTSelector
 {
     struct NodeLevel
     {
@@ -13,10 +13,10 @@ public class BehaviourTree : BTNode
     public BehaviourTree() : base("Tree") { }
     public BehaviourTree(string name) : base(name) { }
 
-    public override Status Process()
+    /*public override Status Process()
     {
         return children[currentChild].Process();
-    }
+    }*/
 
 
     // Debug

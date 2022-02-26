@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BTSequence : BTNode
+public class BTInverter : BTNode
 {
-    public BTSequence(string name)
+
+    public BTInverter(string name)
     {
         this.name = name;
     }
@@ -12,16 +13,15 @@ public class BTSequence : BTNode
     public override Status Process()
     {
         Status childStatus = children[currentChild].Process();
-        if (childStatus != Status.SUCCESS) return childStatus;
-
-        currentChild++;
-        if (currentChild >= children.Count)
+        if (childStatus == Status.SUCCESS)
         {
-            currentChild = 0;
+            return Status.FAILURE;
+        }
+        else if (childStatus == Status.FAILURE)
+        {
             return Status.SUCCESS;
         }
-
-        return Status.RUNNING;
+        else
+            return Status.RUNNING;
     }
-
 }

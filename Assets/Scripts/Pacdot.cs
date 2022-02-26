@@ -7,14 +7,27 @@ public class Pacdot : MonoBehaviour {
 	{
 		if(other.name == "pacman")
 		{
-			GameManager.score += 10;
-		    GameObject[] pacdots = GameObject.FindGameObjectsWithTag("pacdot");
-            Destroy(gameObject);
+			// workaround against not triggering exit colliders
+			// need use coroutine to wait for one fixed update frame before destroying
+			StartCoroutine(DelayDestroy());
 
-		    if (pacdots.Length == 1)
-		    {
-		        GameObject.FindObjectOfType<GameGUINavigation>().LoadLevel();
-		    }
+		}
+	}
+
+	IEnumerator DelayDestroy()
+	{
+		GameManager.score += 10;
+		GameObject[] pacdots = GameObject.FindGameObjectsWithTag("pacdot");
+
+		this.transform.position = new Vector3(-100, -100, 0);
+
+		yield return new WaitForFixedUpdate();
+
+		Destroy(gameObject);
+
+		if (pacdots.Length == 1)
+		{
+			GameObject.FindObjectOfType<GameGUINavigation>().LoadLevel();
 		}
 	}
 

@@ -110,6 +110,9 @@ public class VisualizationManager : MonoBehaviour
 
     public static void DisplayPathfindByNode(PlayerAI.Node node, Color color)
     {
+        if (node == null)
+            return;
+
         //PlayerAI.Node cursor = node;
         while (node.parent != null)
         {

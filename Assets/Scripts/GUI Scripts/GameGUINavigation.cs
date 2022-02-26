@@ -15,6 +15,7 @@ public class GameGUINavigation : MonoBehaviour {
     private bool quit;
     private string _errorMsg;
 	//public bool initialWaitOver = false;
+	private float _prevTimeScale = 1f;
 
 	public float initialDelay;
 
@@ -104,7 +105,7 @@ public class GameGUINavigation : MonoBehaviour {
 		// if paused before key stroke, unpause the game
 		if(_paused)
 		{
-			Time.timeScale = 1;
+			Time.timeScale = _prevTimeScale;
 			PauseCanvas.enabled = false;
 			_paused = false;
 			MenuButton.enabled = true;
@@ -113,6 +114,7 @@ public class GameGUINavigation : MonoBehaviour {
 		// if not paused before key stroke, pause the game
 		else
 		{
+			_prevTimeScale = Time.timeScale;
 			PauseCanvas.enabled = true;
 			Time.timeScale = 0.0f;
 			_paused = true;

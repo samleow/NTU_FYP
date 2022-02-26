@@ -25,6 +25,8 @@ public class PlayerAI : MonoBehaviour
     BehaviourTree tree;
     BTNode.Status treeStatus = BTNode.Status.RUNNING;
 
+    Vector2 _BTmoveDir = Vector2.zero;
+
     #region Singleton
 
     private static PlayerAI _instance = null;
@@ -67,22 +69,36 @@ public class PlayerAI : MonoBehaviour
         // BT init
         tree = new BehaviourTree();
 
-        BTNode seekPellets = new BTNode("Seek pellets");
-        BTNode findPellet = new BTNode("Finding pellets");
-        BTNode foundPellet = new BTNode("Found pellets");
-        BTNode eatPellet = new BTNode("Eat pellets");
+        BTSequence chaseGhosts = new BTSequence("Chase ghosts");
+        BTSequence runFromGhosts = new BTSequence("Run from ghosts");
+        BTSequence seekPellets = new BTSequence("Seek pellets");
 
-        BTLeaf ghostFreeCorridor = new BTLeaf("Move to ghost free corridor", GhostFreeCorridor);
-        BTNode pelletCorridor = new BTNode("Move to corridor with pellets");
-        BTNode noPelletCorridor = new BTNode("Move to corridor without pellets");
+        BTLeaf isPoweredUp = new BTLeaf("Is powered up?", BTIsPoweredUp);
+        BTInverter inverter1 = new BTInverter("Inverter 1");
+        BTLeaf isPoweringDown = new BTLeaf("Is powering down?", BTIsPoweringDown);
+        BTLeaf pursueGhosts = new BTLeaf("Pursue ghosts", BTPursueGhosts);
 
-        findPellet.AddChild(ghostFreeCorridor);
-        findPellet.AddChild(pelletCorridor);
-        findPellet.AddChild(noPelletCorridor);
+        inverter1.AddChild(isPoweringDown);
+        chaseGhosts.AddChild(isPoweredUp);
+        chaseGhosts.AddChild(inverter1);
+        chaseGhosts.AddChild(pursueGhosts);
 
-        seekPellets.AddChild(findPellet);
-        seekPellets.AddChild(foundPellet);
-        seekPellets.AddChild(eatPellet);
+        BTLeaf isGhostsNearby = new BTLeaf("Is ghosts nearby?", BTIsGhostsNearby);
+        BTLeaf run = new BTLeaf("Run", BTRun);
+
+        runFromGhosts.AddChild(isGhostsNearby);
+        runFromGhosts.AddChild(run);
+
+        BTLeaf scanForBestCorridor = new BTLeaf("Scan for best corridor", BTScanForBestCorridor);
+        BTLeaf moveToCorridor = new BTLeaf("Move to corridor", BTMoveToCorridor);
+        BTLeaf eatPellets = new BTLeaf("Eat pellets", BTEatPellets);
+
+        seekPellets.AddChild(scanForBestCorridor);
+        seekPellets.AddChild(moveToCorridor);
+        seekPellets.AddChild(eatPellets);
+
+        tree.AddChild(chaseGhosts);
+        tree.AddChild(runFromGhosts);
         tree.AddChild(seekPellets);
 
         tree.PrintTree();
@@ -99,9 +115,9 @@ public class PlayerAI : MonoBehaviour
         }
         else if (aiMode == AI_MODE.BT)
         {
-            //if (treeStatus == BTNode.Status.RUNNING)
-            if (treeStatus != BTNode.Status.SUCCESS)
-                treeStatus = tree.Process();
+            /*if (treeStatus != BTNode.Status.SUCCESS)
+                treeStatus = tree.Process();*/
+            treeStatus = tree.Process();
         }
         else
         {
@@ -117,7 +133,7 @@ public class PlayerAI : MonoBehaviour
         }
         else if (aiMode == AI_MODE.BT)
         {
-
+            return _BTmoveDir;
         }
         else
             Debug.LogError("AI Mode undefined!");
@@ -133,9 +149,104 @@ public class PlayerAI : MonoBehaviour
         return currentState.name.ToString();
     }
 
+    public bool PoweringDown()
+    {
+        GameManager _gm = GameManager.Instance;
+        if (Time.time >= (_gm._timeToCalm- _gm.scareLength)+ _gm.scareLength*0.66f)
+            return true;
+        else
+            return false;
+    }
+
     #region Behaviour Tree Processes
 
-    BTNode.Status GhostFreeCorridor()
+    BTNode.Status BTIsPoweredUp()
+    {
+        if (GameManager.scared)
+            return BTNode.Status.SUCCESS;
+        else
+            return BTNode.Status.FAILURE;
+    }
+
+    BTNode.Status BTIsPoweringDown()
+    {
+        if (PoweringDown())
+            return BTNode.Status.SUCCESS;
+        else
+            return BTNode.Status.FAILURE;
+    }
+
+    BTNode.Status BTPursueGhosts()
+    {
+        // chase ghost
+        Tuple<Node, Stack<Vector2>> t = PathfindTargetFullInfo(GetClosestGhost(true));
+        VisualizationManager.DisplayPathfindByNode(t.Item1, Color.green);
+
+        if (t.Item2.Count > 0)
+            _BTmoveDir = t.Item2.Peek();
+
+        return BTNode.Status.SUCCESS;
+    }
+
+    BTNode.Status BTIsGhostsNearby()
+    {
+        if (GhostInSight())
+            return BTNode.Status.SUCCESS;
+        else
+            return BTNode.Status.FAILURE;
+    }
+
+    BTNode.Status BTRun()
+    {
+        List<Tuple<Node, Stack<Vector2>>> dangerPaths = new List<Tuple<Node, Stack<Vector2>>>();
+
+        foreach (var ghost in ghosts)
+            dangerPaths.Add(PathfindTargetFullInfo(ghost));
+
+        dangerPaths.Sort(SortByDistance);
+
+        List<Vector2> toAvoid = new List<Vector2>();
+        foreach (var path in dangerPaths)
+        {
+            // ghost still in cage
+            if (path.Item2.Count == 0)
+                continue;
+
+            VisualizationManager.DisplayPathfindByNode(path.Item1, Color.red);
+
+            if (!toAvoid.Contains(path.Item2.Peek()))
+                toAvoid.Add(path.Item2.Peek());
+        }
+
+        foreach (var direction in PossibleDirections())
+        {
+            if (!toAvoid.Contains(direction))
+            {
+                _BTmoveDir = direction;
+                return BTNode.Status.SUCCESS;
+            }
+            else
+                continue;
+        }
+
+        _BTmoveDir = toAvoid[toAvoid.Count - 1];
+
+        return BTNode.Status.SUCCESS;
+    }
+
+    BTNode.Status BTScanForBestCorridor()
+    {
+
+        return BTNode.Status.SUCCESS;
+    }
+
+    BTNode.Status BTMoveToCorridor()
+    {
+
+        return BTNode.Status.SUCCESS;
+    }
+
+    BTNode.Status BTEatPellets()
     {
 
         return BTNode.Status.SUCCESS;
@@ -161,6 +272,51 @@ public class PlayerAI : MonoBehaviour
             this.g = g;
             this.h = h;
         }
+    }
+
+    // Sorts tuples by distance
+    public static int SortByDistance(Tuple<PlayerAI.Node, Stack<Vector2>> stack1, Tuple<PlayerAI.Node, Stack<Vector2>> stack2)
+    {
+        return stack1.Item2.Count.CompareTo(stack2.Item2.Count);
+    }
+
+    // Returns the closest ghost
+    public GameObject GetClosestGhost(bool scaredGhost = false)
+    {
+        GameObject closestGhost = null;
+        float shortest_dist = Mathf.Infinity;
+        foreach (var ghost in ghosts)
+        {
+            if(scaredGhost && ghost.GetComponent<GhostMove>().state != GhostMove.State.Run)
+                continue;
+            if (!scaredGhost && ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
+                continue;
+
+            float dist = Vector3.Distance(ghost.transform.position, pacman.transform.position);
+            if (dist < shortest_dist)
+            {
+                closestGhost = ghost;
+                shortest_dist = dist;
+            }
+        }
+
+        return closestGhost;
+    }
+
+    // Returns true if ghost is in sight or nearby
+    // personalSpace is the range/steps of detection
+    public bool GhostInSight(int personalSpace = 8)
+    {
+        foreach (GameObject ghost in ghosts)
+        {
+            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
+                continue;
+            Tuple<Node, Stack<Vector2>> t = PathfindTargetFullInfo(ghost);
+            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
+                return true;
+        }
+
+        return false;
     }
 
     // List of possible directions from current position

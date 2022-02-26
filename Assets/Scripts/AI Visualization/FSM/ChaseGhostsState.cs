@@ -20,7 +20,7 @@ public class ChaseGhostsState : PlayerState
 
     public override void Update()
     {
-        if (GhostsFlashing() || GhostInSight())
+        if (GhostsFlashing() || PlayerAI.Instance.GhostInSight())
         {
             nextState = new EvadeGhostsState();
             stage = EVENT.EXIT;
@@ -28,7 +28,7 @@ public class ChaseGhostsState : PlayerState
         else
         {
             // chase ghost
-            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(GetClosestGhost());
+            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(PlayerAI.Instance.GetClosestGhost(true));
             VisualizationManager.DisplayPathfindByNode(t.Item1, Color.green);
 
             if (t.Item2.Count > 0)
@@ -50,45 +50,7 @@ public class ChaseGhostsState : PlayerState
     // boost is running out
     private bool GhostsFlashing()
     {
-        // might need to use a timer
-        return !GameManager.scared;
-    }
-
-    private bool GhostInSight()
-    {
-        int personalSpace = 8;
-
-        foreach (GameObject ghost in PlayerAI.Instance.ghosts)
-        {
-            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
-                continue;
-            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(ghost);
-            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
-                return true;
-        }
-
-        return false;
-    }
-
-    // might have a problem when ghost has respawned after being eaten
-    // pacman will chase ghost when ghost is not scared
-    GameObject GetClosestGhost()
-    {
-        GameObject closestGhost = null;
-        float shortest_dist = Mathf.Infinity;
-        foreach (var ghost in PlayerAI.Instance.ghosts)
-        {
-            if (ghost.GetComponent<GhostMove>().state != GhostMove.State.Run)
-                continue;
-            float dist = Vector3.Distance(ghost.transform.position, PlayerAI.Instance.pacman.transform.position);
-            if (dist < shortest_dist)
-            {
-                closestGhost = ghost;
-                shortest_dist = dist;
-            }
-        }
-
-        return closestGhost;
+        return PlayerAI.Instance.PoweringDown();
     }
 
 }

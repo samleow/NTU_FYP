@@ -47,12 +47,12 @@ public class SeekPelletsState : PlayerState
 
     public override void Update()
     {
-        if (PowerPillEaten())
+        if (PowerPillEaten() && !GhostsFlashing())
         {
             nextState = new ChaseGhostsState();
             stage = EVENT.EXIT;
         }
-        else if (GhostInSight())
+        else if (PlayerAI.Instance.GhostInSight())
         {
             nextState = new EvadeGhostsState();
             stage = EVENT.EXIT;
@@ -92,20 +92,10 @@ public class SeekPelletsState : PlayerState
         return GameManager.scared;
     }
 
-    private bool GhostInSight()
+    // boost is running out
+    private bool GhostsFlashing()
     {
-        int personalSpace = 8;
-
-        foreach (GameObject ghost in PlayerAI.Instance.ghosts)
-        {
-            if (ghost.GetComponent<GhostMove>().state == GhostMove.State.Run)
-                continue;
-            Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(ghost);
-            if (t.Item2.Count > 0 && t.Item2.Count <= personalSpace)
-                return true;
-        }
-
-        return false;
+        return PlayerAI.Instance.PoweringDown();
     }
 
 }

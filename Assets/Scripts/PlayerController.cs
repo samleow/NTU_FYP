@@ -97,7 +97,8 @@ public class PlayerController : MonoBehaviour
         // not from directly the center of next tile but just a little further from center of next tile
         Vector2 pos = transform.position;
         direction += new Vector2(direction.x * 0.45f, direction.y * 0.45f);
-        RaycastHit2D hit = Physics2D.Linecast(pos + direction, pos);
+        int layerMask =~ LayerMask.GetMask("corridor");
+        RaycastHit2D hit = Physics2D.Linecast(pos + direction, pos, layerMask);
         return hit.collider.name == "pacdot" || (hit.collider == GetComponent<Collider2D>());
     }
 
