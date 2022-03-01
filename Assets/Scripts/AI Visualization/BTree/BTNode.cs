@@ -9,6 +9,7 @@ public class BTNode
     public List<BTNode> children = new List<BTNode>();
     public int currentChild = 0;
     public string name;
+    public string currentLeaf = "-";
 
     public BTNode() { }
     public BTNode(string name)

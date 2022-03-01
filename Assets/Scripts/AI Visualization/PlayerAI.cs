@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using static TileManager;
+using System.Linq;
 
 public class PlayerAI : MonoBehaviour
 {
@@ -22,8 +23,9 @@ public class PlayerAI : MonoBehaviour
     public AI_MODE aiMode = AI_MODE.FSM;
 
     // Behaviour Tree
-    BehaviourTree tree;
+    public BehaviourTree tree;
     BTNode.Status treeStatus = BTNode.Status.RUNNING;
+    Corridor targetCorridor = null;
 
     Vector2 _BTmoveDir = Vector2.zero;
 
@@ -59,6 +61,12 @@ public class PlayerAI : MonoBehaviour
         }
     }
 
+    public static void DestroySelf()
+    {
+
+        Destroy(GameObject.Find("PlayerAI"));
+    }
+
     #endregion
 
     void Start()
@@ -66,40 +74,9 @@ public class PlayerAI : MonoBehaviour
         activated = false;
         // FSM init
         currentState = new SeekPelletsState();
+
         // BT init
-        tree = new BehaviourTree();
-
-        BTSequence chaseGhosts = new BTSequence("Chase ghosts");
-        BTSequence runFromGhosts = new BTSequence("Run from ghosts");
-        BTSequence seekPellets = new BTSequence("Seek pellets");
-
-        BTLeaf isPoweredUp = new BTLeaf("Is powered up?", BTIsPoweredUp);
-        BTInverter inverter1 = new BTInverter("Inverter 1");
-        BTLeaf isPoweringDown = new BTLeaf("Is powering down?", BTIsPoweringDown);
-        BTLeaf pursueGhosts = new BTLeaf("Pursue ghosts", BTPursueGhosts);
-
-        inverter1.AddChild(isPoweringDown);
-        chaseGhosts.AddChild(isPoweredUp);
-        chaseGhosts.AddChild(inverter1);
-        chaseGhosts.AddChild(pursueGhosts);
-
-        BTLeaf isGhostsNearby = new BTLeaf("Is ghosts nearby?", BTIsGhostsNearby);
-        BTLeaf run = new BTLeaf("Run", BTRun);
-
-        runFromGhosts.AddChild(isGhostsNearby);
-        runFromGhosts.AddChild(run);
-
-        BTLeaf scanForBestCorridor = new BTLeaf("Scan for best corridor", BTScanForBestCorridor);
-        BTLeaf moveToCorridor = new BTLeaf("Move to corridor", BTMoveToCorridor);
-        BTLeaf eatPellets = new BTLeaf("Eat pellets", BTEatPellets);
-
-        seekPellets.AddChild(scanForBestCorridor);
-        seekPellets.AddChild(moveToCorridor);
-        seekPellets.AddChild(eatPellets);
-
-        tree.AddChild(chaseGhosts);
-        tree.AddChild(runFromGhosts);
-        tree.AddChild(seekPellets);
+        BuildBTree();
 
         tree.PrintTree();
 
@@ -123,6 +100,44 @@ public class PlayerAI : MonoBehaviour
         {
             Debug.LogError("AI Mode undefined!");
         }
+    }
+
+    void BuildBTree()
+    {
+        // BT init
+        tree = new BehaviourTree();
+
+        BTSequence chaseGhosts = new BTSequence("Chase ghosts");
+        BTSequence runFromGhosts = new BTSequence("Run from ghosts");
+        BTSequence seekPellets = new BTSequence("Seek pellets");
+
+        BTLeaf isGhostsNearby = new BTLeaf("Is ghosts nearby?", BTIsGhostsNearby);
+        BTLeaf run = new BTLeaf("Run", BTRun);
+
+        runFromGhosts.AddChild(isGhostsNearby);
+        runFromGhosts.AddChild(run);
+
+        BTLeaf isPoweredUp = new BTLeaf("Is powered up?", BTIsPoweredUp);
+        BTInverter inverter1 = new BTInverter("Inverter 1");
+        BTLeaf isPoweringDown = new BTLeaf("Is powering down?", BTIsPoweringDown);
+        BTLeaf pursueGhosts = new BTLeaf("Pursue ghosts", BTPursueGhosts);
+
+        inverter1.AddChild(isPoweringDown);
+        chaseGhosts.AddChild(isPoweredUp);
+        chaseGhosts.AddChild(inverter1);
+        chaseGhosts.AddChild(pursueGhosts);
+
+        BTLeaf scanForBestCorridor = new BTLeaf("Scan for best corridor", BTScanForBestCorridor);
+        BTLeaf moveToCorridor = new BTLeaf("Move to corridor", BTMoveToCorridor);
+        BTLeaf eatPellets = new BTLeaf("Eat pellets", BTEatPellets);
+
+        seekPellets.AddChild(scanForBestCorridor);
+        seekPellets.AddChild(moveToCorridor);
+        seekPellets.AddChild(eatPellets);
+
+        tree.AddChild(runFromGhosts);
+        tree.AddChild(chaseGhosts);
+        tree.AddChild(seekPellets);
     }
 
     public Vector2 GetAIDirection()
@@ -178,6 +193,10 @@ public class PlayerAI : MonoBehaviour
 
     BTNode.Status BTPursueGhosts()
     {
+        // all ghosts were eaten
+        if (GetClosestGhost(true) == null)
+            return BTNode.Status.FAILURE;
+
         // chase ghost
         Tuple<Node, Stack<Vector2>> t = PathfindTargetFullInfo(GetClosestGhost(true));
         VisualizationManager.DisplayPathfindByNode(t.Item1, Color.green);
@@ -234,22 +253,110 @@ public class PlayerAI : MonoBehaviour
         return BTNode.Status.SUCCESS;
     }
 
-    BTNode.Status BTScanForBestCorridor()
+    BTNode.Status ScanForBestCorridor(float scanRadius = 5f)
     {
+        // scans for corridors in a radius
+        Collider2D[] colliders = Physics2D.OverlapCircleAll((Vector2)pacman.transform.position, scanRadius);
+        List<Corridor> corridors = colliders.Select(f => f.GetComponent<Corridor>()).ToList();
+
+        Corridor bestCorridor = null;
+
+        foreach (Corridor corridor in corridors)
+        {
+            // collider that is not a corridor
+            if (corridor == null)
+                continue;
+
+            // skips corridors with ghosts
+            // might not be efficient as ghosts will move through corridors quickly
+            // as the corridors are small
+            if (corridor.ghost_count > 0)
+                continue;
+            // skips corridors with no pellets
+            // no incentive to target such corridors
+            if (corridor.pellet_count <= 0)
+                continue;
+            // set first best option
+            if (bestCorridor == null)
+            {
+                bestCorridor = corridor;
+            }
+            // compare best corridor with current corridor
+            else if (corridor.pellet_count > bestCorridor.pellet_count)
+            {
+                bestCorridor = corridor;
+            }
+        }
+
+        if (bestCorridor == null)
+        {
+            // max radius hit
+            // either ghost occupy the last few corridors with pellets,
+            // or there is a problem where all pellets are eaten but game still runs
+            if (scanRadius >= 40f)
+                return BTNode.Status.FAILURE;
+
+            // recursively scan with increased radius
+            return ScanForBestCorridor(scanRadius + 2f);
+
+        }
+
+        targetCorridor = bestCorridor;
 
         return BTNode.Status.SUCCESS;
+    }
+
+    BTNode.Status BTScanForBestCorridor()
+    {
+        return ScanForBestCorridor();
     }
 
     BTNode.Status BTMoveToCorridor()
     {
+        if (targetCorridor == null)
+            return BTNode.Status.FAILURE;
+        // corridor is for some reason empty,
+        // even though there should be pellets inside
+        GameObject pellet = targetCorridor.UpdatePellet();
+        if (pellet == null)
+            return BTNode.Status.SUCCESS;
 
-        return BTNode.Status.SUCCESS;
+        Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(pellet);
+        VisualizationManager.DisplayPathfindByNode(t.Item1, Color.cyan);
+
+        if (t.Item2.Count > 0)
+            _BTmoveDir = t.Item2.Peek();
+
+        if (targetCorridor.ContainsPacMan())
+            return BTNode.Status.SUCCESS;
+
+        // by right should return RUNNING status,
+        // but if is in RUNNING status,
+        // all other checks are disabled (eg ghost can ambush)
+        return BTNode.Status.FAILURE;
     }
 
     BTNode.Status BTEatPellets()
     {
+        if (targetCorridor == null)
+            return BTNode.Status.FAILURE;
+        // successfully cleared corridor
+        GameObject pellet = targetCorridor.UpdatePellet();
+        if (pellet == null)
+            return BTNode.Status.SUCCESS;
 
-        return BTNode.Status.SUCCESS;
+        //_BTmoveDir = PathfindTargetDirection(pellet);
+
+        Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(pellet);
+        VisualizationManager.DisplayPathfindByNode(t.Item1, Color.cyan);
+
+        if (t.Item2.Count > 0)
+            _BTmoveDir = t.Item2.Peek();
+
+        // by right should return RUNNING status,
+        // but if is in RUNNING status,
+        // all other checks are disabled (eg ghost can ambush)
+        return BTNode.Status.FAILURE;
     }
 
     #endregion

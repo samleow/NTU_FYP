@@ -47,7 +47,7 @@ public class VisualizationManager : MonoBehaviour
         else if (PlayerAI.Instance.aiMode == PlayerAI.AI_MODE.BT)
         {
             AIModeText.text = "Behavior Tree";
-            AIStateText.text = "-";
+            AIStateText.text = PlayerAI.Instance.tree.currentLeaf;// "-";
         }
         else
             Debug.LogError("AI Mode undefined!");
@@ -92,13 +92,19 @@ public class VisualizationManager : MonoBehaviour
         switch (speedSlider.value)
         {
             case 0:
-                Time.timeScale = 0.5f;
+                Time.timeScale = 0f;
                 break;
             case 1:
-                Time.timeScale = 1f;
+                Time.timeScale = 0.5f;
                 break;
             case 2:
+                Time.timeScale = 1f;
+                break;
+            case 3:
                 Time.timeScale = 2f;
+                break;
+            case 4:
+                Time.timeScale = 3f;
                 break;
             default:
                 Time.timeScale = 1f;

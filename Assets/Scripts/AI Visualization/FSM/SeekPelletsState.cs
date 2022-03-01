@@ -67,7 +67,7 @@ public class SeekPelletsState : PlayerState
             // sets moveDirection
 
             Tuple<PlayerAI.Node, Stack<Vector2>> t = PlayerAI.Instance.PathfindTargetFullInfo(closestPellet);
-            VisualizationManager.DisplayPathfindByNode(t.Item1, Color.green);
+            VisualizationManager.DisplayPathfindByNode(t.Item1, Color.cyan);
 
             if (t.Item2.Count > 0)
                 moveDirection = t.Item2.Peek();

@@ -25,6 +25,12 @@ public class ChaseGhostsState : PlayerState
             nextState = new EvadeGhostsState();
             stage = EVENT.EXIT;
         }
+        // no scared ghosts (all ghosts were eaten)
+        else if (PlayerAI.Instance.GetClosestGhost(true) == null)
+        {
+            nextState = new EvadeGhostsState();
+            stage = EVENT.EXIT;
+        }
         else
         {
             // chase ghost

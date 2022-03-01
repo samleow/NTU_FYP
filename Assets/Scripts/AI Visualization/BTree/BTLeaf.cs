@@ -11,6 +11,7 @@ public class BTLeaf : BTNode
     public BTLeaf(string n, Tick pm)
     {
         name = n;
+        currentLeaf = name;
         ProcessMethod = pm;
     }
 

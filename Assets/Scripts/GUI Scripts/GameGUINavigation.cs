@@ -150,6 +150,8 @@ public class GameGUINavigation : MonoBehaviour {
 
         // take care of game manager
 	    GameManager.DestroySelf();
+
+		PlayerAI.DestroySelf();
 	}
 
     IEnumerator AddScore(string name, int score)
@@ -172,7 +174,9 @@ public class GameGUINavigation : MonoBehaviour {
             GameManager.score = 0;
             GameManager.Level = 0;
 
-            //Application.LoadLevel("scores");
+			PlayerAI.DestroySelf();
+
+			//Application.LoadLevel("scores");
 			SceneManager.LoadScene("scores");
 			Time.timeScale = 1.0f;
         }
