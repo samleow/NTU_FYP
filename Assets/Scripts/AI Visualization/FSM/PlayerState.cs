@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerState
 {
-    public enum STATE { NULL, SEEK_PELLETS, CHASE_GHOSTS, EVADE_GHOSTS }
+    public enum STATE { SEEK_PELLETS, CHASE_GHOSTS, EVADE_GHOSTS }
 
     public enum EVENT { ENTER, UPDATE, EXIT }
 
@@ -18,7 +18,7 @@ public class PlayerState
 
     public PlayerState()
     {
-        name = STATE.NULL;
+        name = STATE.SEEK_PELLETS;
         stage = EVENT.ENTER;
         nextState = null;
         moveDirection = Vector2.zero;

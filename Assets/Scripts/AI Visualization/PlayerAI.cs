@@ -111,7 +111,7 @@ public class PlayerAI : MonoBehaviour
         BTSequence runFromGhosts = new BTSequence("Run from ghosts");
         BTSequence seekPellets = new BTSequence("Seek pellets");
 
-        BTLeaf isGhostsNearby = new BTLeaf("Is ghosts nearby?", BTIsGhostsNearby);
+        BTLeaf isGhostsNearby = new BTLeaf("Is ghost nearby?", BTIsGhostsNearby);
         BTLeaf run = new BTLeaf("Run", BTRun);
 
         runFromGhosts.AddChild(isGhostsNearby);
