@@ -112,7 +112,7 @@ public class PlayerAI : MonoBehaviour
         BTSequence seekPellets = new BTSequence("Seek pellets");
 
         BTLeaf isGhostsNearby = new BTLeaf("Is ghost nearby?", BTIsGhostsNearby);
-        BTLeaf run = new BTLeaf("Run", BTRun);
+        BTLeaf run = new BTLeaf("Run", BTRun, true);
 
         runFromGhosts.AddChild(isGhostsNearby);
         runFromGhosts.AddChild(run);
@@ -120,7 +120,7 @@ public class PlayerAI : MonoBehaviour
         BTLeaf isPoweredUp = new BTLeaf("Is powered up?", BTIsPoweredUp);
         BTInverter inverter1 = new BTInverter("Inverter 1");
         BTLeaf isPoweringDown = new BTLeaf("Is powering down?", BTIsPoweringDown);
-        BTLeaf pursueGhosts = new BTLeaf("Pursue ghosts", BTPursueGhosts);
+        BTLeaf pursueGhosts = new BTLeaf("Pursue ghosts", BTPursueGhosts, true);
 
         inverter1.AddChild(isPoweringDown);
         chaseGhosts.AddChild(isPoweredUp);
@@ -129,7 +129,7 @@ public class PlayerAI : MonoBehaviour
 
         BTLeaf scanForBestCorridor = new BTLeaf("Scan for best corridor", BTScanForBestCorridor);
         BTLeaf moveToCorridor = new BTLeaf("Move to corridor", BTMoveToCorridor);
-        BTLeaf eatPellets = new BTLeaf("Eat pellets", BTEatPellets);
+        BTLeaf eatPellets = new BTLeaf("Eat pellets", BTEatPellets, true);
 
         seekPellets.AddChild(scanForBestCorridor);
         seekPellets.AddChild(moveToCorridor);

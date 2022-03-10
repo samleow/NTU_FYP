@@ -5,9 +5,15 @@ using UnityEngine.UI;
 public class NameToTitle : MonoBehaviour {
 
 	public Text title;
+	private string titleText;
+
+    private void Start()
+    {
+		titleText = title.text;
+    }
 
 
-	void OnMouseEnter()
+    void OnMouseEnter()
 	{
 		switch(name)
 		{
@@ -37,7 +43,7 @@ public class NameToTitle : MonoBehaviour {
 
 	void OnMouseExit()
 	{
-		title.text = "Pac-Man Clone";
+		title.text = titleText;
 		title.color = Color.white;
 	}
 }

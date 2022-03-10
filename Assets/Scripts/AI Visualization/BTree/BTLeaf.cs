@@ -6,13 +6,15 @@ public class BTLeaf : BTNode
 {
     public delegate Status Tick();
     public Tick ProcessMethod;
+    public bool coreProcess = false;
 
     public BTLeaf() { }
-    public BTLeaf(string n, Tick pm)
+    public BTLeaf(string n, Tick pm, bool coreProcess = false)
     {
         name = n;
-        currentLeaf = name;
+        currentLeaf = this;
         ProcessMethod = pm;
+        this.coreProcess = coreProcess;
     }
 
     public override Status Process()

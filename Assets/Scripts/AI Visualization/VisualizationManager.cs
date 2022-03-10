@@ -21,7 +21,8 @@ public class VisualizationManager : MonoBehaviour
     public GameObject btRoot;
 
     private bool fsmGenerated = false;
-    private bool btGenerated = false;
+    // not used as for now, BT is "hardcoded" in Editor
+    //private bool btGenerated = false;
 
     // dictionaries of generated nodes
     private Dictionary<string, Image> fsmNodes = new Dictionary<string, Image>();
@@ -64,7 +65,8 @@ public class VisualizationManager : MonoBehaviour
         else if (PlayerAI.Instance.aiMode == PlayerAI.AI_MODE.BT)
         {
             AIModeText.text = "Behavior Tree";
-            AIStateText.text = PlayerAI.Instance.tree.currentLeaf;// "-";
+            if(PlayerAI.Instance.tree.currentLeaf != null && PlayerAI.Instance.tree.currentLeaf.coreProcess)
+                AIStateText.text = PlayerAI.Instance.tree.currentLeaf.name;// "-";
             DisplayBT();
         }
         else
@@ -287,7 +289,10 @@ public class VisualizationManager : MonoBehaviour
             n.color = Color.white;
         }
 
-        Image leafNode = nodes.FirstOrDefault(c => c.gameObject.name == PlayerAI.Instance.tree.currentLeaf);
+        if (PlayerAI.Instance.tree.currentLeaf == null)
+            return;
+
+        Image leafNode = nodes.FirstOrDefault(c => c.gameObject.name == PlayerAI.Instance.tree.currentLeaf.name);
 
         if (leafNode)
         {
