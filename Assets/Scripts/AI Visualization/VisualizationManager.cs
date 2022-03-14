@@ -16,6 +16,7 @@ public class VisualizationManager : MonoBehaviour
 
     public RectTransform fsmDiagram;
     public RectTransform btDiagram;
+    public RectTransform utilDiagram;
     public Sprite nodeSprite;
     public Font nodeFont;
     public GameObject btRoot;
@@ -65,9 +66,15 @@ public class VisualizationManager : MonoBehaviour
         else if (PlayerAI.Instance.aiMode == PlayerAI.AI_MODE.BT)
         {
             AIModeText.text = "Behavior Tree";
-            if(PlayerAI.Instance.tree.currentLeaf != null && PlayerAI.Instance.tree.currentLeaf.coreProcess)
-                AIStateText.text = PlayerAI.Instance.tree.currentLeaf.name;// "-";
+            if (PlayerAI.Instance.tree.currentLeaf != null && PlayerAI.Instance.tree.currentLeaf.coreProcess)
+                AIStateText.text = PlayerAI.Instance.tree.currentLeaf.name;
             DisplayBT();
+        }
+        else if (PlayerAI.Instance.aiMode == PlayerAI.AI_MODE.UTIL)
+        {
+            AIModeText.text = "Utility-based AI";
+            AIStateText.text = PlayerAI.Instance.utilityAI.bestAction.Name;
+            DisplayUtilAI();
         }
         else
             Debug.LogError("AI Mode undefined!");
@@ -98,10 +105,12 @@ public class VisualizationManager : MonoBehaviour
     // FSM or BT
     public void ToggleAIModes()
     {
-        if (toggleAIMode.value == 1)
-            PlayerAI.Instance.aiMode = PlayerAI.AI_MODE.BT;
-        else if (toggleAIMode.value == 0)
+        if (toggleAIMode.value == 0)
             PlayerAI.Instance.aiMode = PlayerAI.AI_MODE.FSM;
+        else if (toggleAIMode.value == 1)
+            PlayerAI.Instance.aiMode = PlayerAI.AI_MODE.BT;
+        else if (toggleAIMode.value == 2)
+            PlayerAI.Instance.aiMode = PlayerAI.AI_MODE.UTIL;
         else
             Debug.LogError("Slider error!");
     }
@@ -148,7 +157,7 @@ public class VisualizationManager : MonoBehaviour
         }
     }
 
-    public static void DrawLine(Vector3 start, Vector3 end, Color color, Transform parent = null, float duration = 0.1f)
+    public static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.1f, Transform parent = null)
     {
         GameObject myLine = new GameObject();
         if (parent)
@@ -224,6 +233,7 @@ public class VisualizationManager : MonoBehaviour
         {
             fsmDiagram.gameObject.SetActive(true);
             btDiagram.gameObject.SetActive(false);
+            utilDiagram.gameObject.SetActive(false);
         }
 
         // update highlighted node
@@ -279,6 +289,7 @@ public class VisualizationManager : MonoBehaviour
         {
             btDiagram.gameObject.SetActive(true);
             fsmDiagram.gameObject.SetActive(false);
+            utilDiagram.gameObject.SetActive(false);
         }
 
         // update highlighted node
@@ -297,6 +308,18 @@ public class VisualizationManager : MonoBehaviour
         if (leafNode)
         {
             HighlightBT(leafNode.GetComponent<Image>());
+        }
+    }
+
+    void DisplayUtilAI()
+    {
+        // if diagram not displayed yet
+        //      display diagram
+        if (!utilDiagram.gameObject.activeInHierarchy)
+        {
+            utilDiagram.gameObject.SetActive(true);
+            fsmDiagram.gameObject.SetActive(false);
+            btDiagram.gameObject.SetActive(false);
         }
     }
 

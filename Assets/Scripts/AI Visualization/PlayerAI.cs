@@ -18,7 +18,7 @@ public class PlayerAI : MonoBehaviour
     // FSM state
     private PlayerState currentState;
 
-    public enum AI_MODE { FSM, BT }
+    public enum AI_MODE { FSM, BT, UTIL }
 
     public AI_MODE aiMode = AI_MODE.FSM;
 
@@ -26,8 +26,13 @@ public class PlayerAI : MonoBehaviour
     public BehaviourTree tree;
     BTNode.Status treeStatus = BTNode.Status.RUNNING;
     Corridor targetCorridor = null;
-
     Vector2 _BTmoveDir = Vector2.zero;
+
+    // Utility AI
+    public Action[] actionsAvailable;
+    public UtilityAI utilityAI;
+    public Vector2 utilAImoveDir = Vector2.zero;
+    public float threatValue = 0f;
 
     #region Singleton
 
@@ -78,7 +83,10 @@ public class PlayerAI : MonoBehaviour
         // BT init
         BuildBTree();
 
-        tree.PrintTree();
+        //tree.PrintTree();
+
+        // Utility AI init
+        utilityAI = GetComponent<UtilityAI>();
 
     }
 
@@ -96,12 +104,25 @@ public class PlayerAI : MonoBehaviour
                 treeStatus = tree.Process();*/
             treeStatus = tree.Process();
         }
+        else if (aiMode == AI_MODE.UTIL)
+        {
+            if (utilityAI.finishedDeciding)
+            {
+                utilityAI.finishedDeciding = false;
+                utilityAI.bestAction.Execute(this);
+            }
+
+            // update stats
+            UpdateThreatValue();
+
+        }
         else
         {
             Debug.LogError("AI Mode undefined!");
         }
     }
 
+    // builds/initialise the Behaviour Tree
     void BuildBTree()
     {
         // BT init
@@ -143,13 +164,11 @@ public class PlayerAI : MonoBehaviour
     public Vector2 GetAIDirection()
     {
         if (aiMode == AI_MODE.FSM)
-        {
             return currentState.GetDirection();
-        }
         else if (aiMode == AI_MODE.BT)
-        {
             return _BTmoveDir;
-        }
+        else if (aiMode == AI_MODE.UTIL)
+            return utilAImoveDir;
         else
             Debug.LogError("AI Mode undefined!");
 
@@ -171,6 +190,22 @@ public class PlayerAI : MonoBehaviour
             return true;
         else
             return false;
+    }
+
+    // returns the number of scared ghosts
+    public int NumOfScaredGhosts()
+    {
+        List<GhostMove> ghostMoves = new List<GhostMove>();
+        ghostMoves.AddRange(ghosts.Select(go => go.GetComponent<GhostMove>()));
+
+        int count = 0;
+        foreach (var ghost in ghostMoves)
+        {
+            if (ghost.state == GhostMove.State.Run)
+                count++;
+        }
+
+        return count;
     }
 
     #region Behaviour Tree Processes
@@ -361,6 +396,31 @@ public class PlayerAI : MonoBehaviour
 
     #endregion
 
+    #region Utility Based AI
+    public void OnFinishedAction()
+    {
+        utilityAI.DecideBestAction(actionsAvailable);
+    }
+
+    void UpdateThreatValue()
+    {
+        // TODO:
+
+        // calculate threat value based on ghosts position and state
+        // eg.
+        //ghost nearby = the nearer the higher
+        //ghost scared = 0
+        //ghost flashing = *0.75
+        //ghost facing player = *1.5
+        //ghost facing away = *0.5
+        if (GhostInSight())
+            threatValue = 1;
+        else
+            threatValue = 0;
+    }
+
+    #endregion
+
     #region Pathfinding
 
     public class Node
@@ -536,6 +596,111 @@ public class PlayerAI : MonoBehaviour
                 }
 
                 // TODO: child.Value may be lost outside of scope, need double check !!
+                if (!isIn)
+                    openList.Add(new Node(child, current, g_score + h_score, g_score, h_score));
+            }
+
+        }
+
+        return Tuple.Create(path, directions);
+    }
+
+    // Pathfind from start position to target with startDir
+    // can only change direction at junctions
+    // uses A Star search
+    // returns the final node and a stack of directions
+    // TODO:
+    public Tuple<Node, Stack<Vector2>> GhostPathfindFullInfo(GameObject start, GameObject end, Vector3 startDir)
+    {
+        Vector3 currentPos = new Vector3(start.transform.position.x + 0.499f, start.transform.position.y + 0.499f);
+        Tile currentTile = tileManager.tiles[tileManager.Index((int)currentPos.x, (int)currentPos.y)];
+
+        Vector3 targetPos = new Vector3(end.transform.position.x + 0.499f, end.transform.position.y + 0.499f);
+        Tile targetTile = tileManager.tiles[tileManager.Index((int)targetPos.x, (int)targetPos.y)];
+
+        List<Node> openList = new List<Node>();
+        List<Node> closedList = new List<Node>();
+        openList.Add(new Node(currentTile));
+
+        Stack<Vector2> directions = new Stack<Vector2>();
+
+        // for displaying the path
+        Node path = null;
+
+        while (openList.Count > 0)
+        {
+            Node current = openList[0];
+
+            foreach (Node node in openList)
+            {
+                if (node.f < current.f)
+                    current = node;
+            }
+
+            if (current.tile.Equals(targetTile))
+            {
+                path = current;
+
+                // retrace path and return direction
+                while (current.parent != null)
+                {
+                    directions.Push(current.parent.tile.GetTileDirection(current.tile));
+                    current = current.parent;
+                }
+
+                // return the directions here
+                return Tuple.Create(path, directions);
+            }
+
+            openList.Remove(current);
+            closedList.Add(current);
+
+            // check if current tile is not an intersection
+            if (!current.tile.isIntersection)
+            {
+                // get prev dir
+                Vector2 dir;
+                if (current.parent != null)
+                    dir = current.parent.tile.GetTileDirection(current.tile);
+                else
+                    dir = (Vector2)startDir;
+
+                // move in prev dir along corridor
+
+            }
+
+            // create list of tile branches
+            // ignoring walls
+            List<Tile> branches = new List<Tile>();
+            if (current.tile.up != null && !current.tile.up.occupied) branches.Add(current.tile.up);
+            if (current.tile.down != null && !current.tile.down.occupied) branches.Add(current.tile.down);
+            if (current.tile.left != null && !current.tile.left.occupied) branches.Add(current.tile.left);
+            if (current.tile.right != null && !current.tile.right.occupied) branches.Add(current.tile.right);
+
+            foreach (var child in branches)
+            {
+                float g_score = current.g + tileManager.distance(current.tile, child);
+                float h_score = tileManager.distance(child, targetTile);
+
+                // check if child is alrdy in the closedList
+                bool isIn = false;
+                foreach (Node node in closedList)
+                {
+                    if (node.tile.Equals(child))
+                    {
+                        // if current path has better f score, update values in closed list
+                        if (g_score + h_score < node.f)
+                        {
+                            node.parent = current;
+                            node.f = g_score + h_score;
+                            node.g = g_score;
+                            node.h = h_score;
+                        }
+                        isIn = true;
+                        break;
+                    }
+                }
+
                 if (!isIn)
                     openList.Add(new Node(child, current, g_score + h_score, g_score, h_score));
             }

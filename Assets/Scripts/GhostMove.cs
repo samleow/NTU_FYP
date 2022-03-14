@@ -11,7 +11,7 @@ public class GhostMove : MonoBehaviour {
 	private Queue<Vector3> waypoints;	// waypoints used on Init and Scatter states
 
 	// direction is set from the AI component
-	public Vector3 _direction;
+	private Vector3 _direction;
 	public Vector3 direction 
 	{
 		get
