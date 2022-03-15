@@ -33,6 +33,7 @@ public class PlayerAI : MonoBehaviour
     public UtilityAI utilityAI;
     public Vector2 utilAImoveDir = Vector2.zero;
     public float threatValue = 0f;
+    public float poweredUpValue = 0f;
 
     #region Singleton
 
@@ -113,7 +114,7 @@ public class PlayerAI : MonoBehaviour
             }
 
             // update stats
-            UpdateThreatValue();
+            UpdateConsiderationValues();
 
         }
         else
@@ -402,7 +403,7 @@ public class PlayerAI : MonoBehaviour
         utilityAI.DecideBestAction(actionsAvailable);
     }
 
-    void UpdateThreatValue()
+    void UpdateConsiderationValues()
     {
         // TODO:
 
@@ -417,6 +418,12 @@ public class PlayerAI : MonoBehaviour
             threatValue = 1;
         else
             threatValue = 0;
+
+        // powered up value
+        poweredUpValue = NumOfScaredGhosts();
+        if (PoweringDown())
+            poweredUpValue *= 0.5f;
+        poweredUpValue /= 4;
     }
 
     #endregion

@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class Consideration : ScriptableObject
 {
     public string Name;
+    [SerializeField] protected AnimationCurve responseCurve;
 
     private float _score;
     public float score
@@ -19,6 +20,11 @@ public abstract class Consideration : ScriptableObject
     public virtual void Awake()
     {
         score = 0;
+    }
+
+    public virtual AnimationCurve GetAnimationCurve()
+    {
+        return responseCurve;
     }
 
     public abstract float ScoreConsideration(PlayerAI playerAI);

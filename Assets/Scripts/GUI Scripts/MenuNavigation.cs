@@ -6,7 +6,7 @@ public class MenuNavigation : MonoBehaviour {
 
     private void Start()
     {
-		Screen.SetResolution(1280, 720, false);
+		//Screen.SetResolution(1280, 720, false);
     }
 
     public void MainMenu()

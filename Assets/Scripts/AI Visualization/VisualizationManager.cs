@@ -22,6 +22,7 @@ public class VisualizationManager : MonoBehaviour
     public GameObject btRoot;
 
     private bool fsmGenerated = false;
+    private bool utilGenerated = false;
     // not used as for now, BT is "hardcoded" in Editor
     //private bool btGenerated = false;
 
@@ -157,7 +158,7 @@ public class VisualizationManager : MonoBehaviour
         }
     }
 
-    public static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.1f, Transform parent = null)
+    public static LineRenderer DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.1f, Transform parent = null)
     {
         GameObject myLine = new GameObject();
         if (parent)
@@ -172,6 +173,7 @@ public class VisualizationManager : MonoBehaviour
         lr.SetPosition(1, end);
         if(duration >= 0f)
             GameObject.Destroy(myLine, duration);
+        return lr;
     }
 
     #endregion
@@ -180,10 +182,10 @@ public class VisualizationManager : MonoBehaviour
 
     class Link
     {
-        public Image link;
+        public LinkRenderer linkRenderer;
         public List<Image> nodes = new List<Image>();
         public Link() { }
-        public Link(Image link) { this.link = link; }
+        public Link(LinkRenderer linkRenderer) { this.linkRenderer = linkRenderer; }
     }
 
     void DisplayFSM()
@@ -208,16 +210,16 @@ public class VisualizationManager : MonoBehaviour
 
             // generate links/lines between nodes
             Image[] nodesArray = fsmNodes.Values.ToArray<Image>();
-            Link link = new Link(DrawLink(nodesArray[0].GetComponent<RectTransform>().anchoredPosition,
-                nodesArray[nodesArray.Length - 1].GetComponent<RectTransform>().anchoredPosition,
+            Link link = new Link(DrawLink(nodesArray[0].GetComponent<RectTransform>().position,
+                nodesArray[nodesArray.Length - 1].GetComponent<RectTransform>().position,
                 fsmDiagram));
             link.nodes.Add(nodesArray[0]);
             link.nodes.Add(nodesArray[nodesArray.Length - 1]);
             fsmLinks.Add(link);
             for (int i = 1; i < nodesArray.Length; i++)
             {
-                link = new Link(DrawLink(nodesArray[i - 1].GetComponent<RectTransform>().anchoredPosition,
-                    nodesArray[i].GetComponent<RectTransform>().anchoredPosition,
+                link = new Link(DrawLink(nodesArray[i - 1].GetComponent<RectTransform>().position,
+                    nodesArray[i].GetComponent<RectTransform>().position,
                     fsmDiagram));
                 link.nodes.Add(nodesArray[i - 1]);
                 link.nodes.Add(nodesArray[i]);
@@ -259,7 +261,7 @@ public class VisualizationManager : MonoBehaviour
                 {
                     if (nodeHighlighted)
                     {
-                        StartCoroutine(HighlightImage(link.link));
+                        StartCoroutine(HighlightLink(link.linkRenderer));
                     }
                     nodeHighlighted = true;
                 }
@@ -267,7 +269,7 @@ public class VisualizationManager : MonoBehaviour
                 {
                     if (nodeHighlighted)
                     {
-                        StartCoroutine(HighlightImage(link.link));
+                        StartCoroutine(HighlightLink(link.linkRenderer));
                     }
                     nodeHighlighted = true;
                 }
@@ -321,6 +323,15 @@ public class VisualizationManager : MonoBehaviour
             fsmDiagram.gameObject.SetActive(false);
             btDiagram.gameObject.SetActive(false);
         }
+
+        // plot graphs
+        if (!utilGenerated)
+        {
+            utilDiagram.GetComponent<UtilityVisualization>().PlotGraphs();
+            utilGenerated = true;
+        }
+
+        utilDiagram.GetComponent<UtilityVisualization>().HighlightGraph();
     }
 
     void HighlightBT(Image node)
@@ -333,27 +344,25 @@ public class VisualizationManager : MonoBehaviour
         }
     }
 
-    IEnumerator HighlightImage(Image img)
+    IEnumerator HighlightLink(LinkRenderer lr)
     {
-        img.color = Color.green;
-        yield return new WaitForSeconds(0.3f);
-        img.color = Color.white;
+        lr.color = Color.green;
+        yield return new WaitForSeconds(0.2f);
+        lr.color = Color.white;
     }
 
-    Image DrawLink(Vector2 start, Vector2 end, Transform parent)
+    LinkRenderer DrawLink(Vector2 start, Vector2 end, Transform parent)
     {
-        GameObject go = new GameObject("link", typeof(Image));
+        GameObject go = new GameObject("link", typeof(LinkRenderer));
+        go.AddComponent<CanvasRenderer>();
         go.transform.SetParent(parent.Find("links"));
-        go.GetComponent<Image>().color = Color.white;
+        LinkRenderer lr = go.GetComponent<LinkRenderer>();
+        lr.color = Color.white;
         RectTransform rtransform = go.GetComponent<RectTransform>();
-        Vector2 dir = (end - start).normalized;
-        float dist = Vector2.Distance(start, end);
-        rtransform.anchorMin = Vector2.zero;
-        rtransform.anchorMax = Vector2.zero;
-        rtransform.sizeDelta = new Vector2(dist, 3);
-        rtransform.anchoredPosition = start + dir * dist * 0.5f;
-        rtransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(dir.y, dir.x) * 180 / Mathf.PI);
-        return go.GetComponent<Image>();
+        rtransform.position = start;
+        lr.end = end;
+        lr.thickness = 3f;
+        return go.GetComponent<LinkRenderer>();
     }
 
     // Bounds of diagram space (550, 300)
