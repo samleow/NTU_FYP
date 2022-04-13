@@ -48,8 +48,8 @@ public class VisualizationManager : MonoBehaviour
         PlayerAI.Instance.activated = false;
     }
 
-    // Update is called once per frame
-    void Update()
+
+    void FixedUpdate()
     {
         if (PC.playerControl)
         {
